@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "473450864452",
+    "project_id": "sbu-lib-fc415",
+    "storage_bucket": "sbu-lib-fc415.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:473450864452:android:a62e68c00b6f4138ba4111",
+        "android_client_info": {
+          "package_name": "com.example.fluttertest"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlBZaR1I96Bsr8EZ8Z8LpKikaJJXUTUbE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

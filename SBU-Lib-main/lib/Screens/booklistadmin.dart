@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertest/Screens/AddBook.dart';
 import 'package:fluttertest/Screens/NavBar.dart';
+import 'package:fluttertest/Screens/editbook.dart';
 import 'package:fluttertest/Screens/who_are_you.dart';
 import 'package:fluttertest/component/add_button.dart';
 import 'package:fluttertest/component/editedbookcard.dart';
@@ -37,7 +38,7 @@ class _BooksListAdminState extends State<BooksListAdmin> {
         backgroundColor: Colors.white,
         centerTitle: true,
       ),
-      drawer: const NavBar() ,
+      drawer: const NavBar(),
       body: Column(
         children: [
           MyTextField2(
@@ -60,7 +61,17 @@ class _BooksListAdminState extends State<BooksListAdmin> {
                     itemBuilder: (context, index) {
                       var doc = snapshot.data!.docs[index];
                       return EditedBookCard(
-                        name: doc['title'], // Assuming 'title' is the field in the document
+                        name: doc['title'],
+                        docId: doc.id, // Get the document ID
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => EditBook(
+                                      docid: doc.id,
+                                    )),
+                          );
+                        },
                       );
                     },
                   );

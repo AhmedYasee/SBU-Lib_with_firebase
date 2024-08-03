@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertest/Screens/NavBar.dart';
+import 'package:fluttertest/Screens/booklistadmin.dart';
 import 'package:get/route_manager.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:fluttertest/Screens/NavBar.dart';
 
 class EditBook extends StatefulWidget {
   final String docid;
@@ -26,6 +29,9 @@ class _EditBookState extends State<EditBook> {
   CollectionReference books = FirebaseFirestore.instance.collection('books');
   String? oldTitle;
   String? oldDescription;
+  String? oldType;
+  String? oldPoster;
+  String? oldImageUrl;
 
   @override
   void initState() {
@@ -39,20 +45,14 @@ class _EditBookState extends State<EditBook> {
       setState(() {
         oldTitle = documentSnapshot.get('title');
         oldDescription = documentSnapshot.get('discription');
+        oldType = documentSnapshot.get('type');
+        oldImageUrl =
+            documentSnapshot.get('imageUrl'); // Use imageUrl instead of poster
+        title.text = oldTitle!;
+        discription.text = oldDescription!;
+        type = oldType;
       });
     }
-  }
-
-  Future<void> updateBook(String documentId) async {
-    // Call the user's CollectionReference to update a document
-    return books
-        .doc(widget.docid) // specify the document ID
-        .update({
-          'title': title.text,
-          'discription': discription.text,
-        })
-        .then((value) => print("Book updated"))
-        .catchError((error) => print("Failed to update book: $error"));
   }
 
   Future<void> pickImage() async {
@@ -63,6 +63,55 @@ class _EditBookState extends State<EditBook> {
         _imageFile = File(pickedImage.path);
       });
     }
+  }
+
+  Future<void> updateBook(String documentId) async {
+    // Call the user's CollectionReference to update a document
+    if (_imageFile != null) {
+      // Delete the old image
+      if (oldImageUrl != null) {
+        final Reference storageReference =
+            FirebaseStorage.instance.refFromURL(oldImageUrl!);
+        await storageReference.delete();
+      }
+
+      // Upload the new image to Firebase Storage
+      final Reference storageReference = FirebaseStorage.instance
+          .ref()
+          .child('book_images/${DateTime.now().millisecondsSinceEpoch}.jpeg');
+      final metadata = SettableMetadata(
+        contentType: 'image/jpeg',
+        customMetadata: {'uploaded_by': 'your_app_name'},
+      );
+      UploadTask uploadTask = storageReference.putFile(_imageFile!, metadata);
+      await uploadTask.whenComplete(() async {
+        // Get the download URL
+        String imageUrl = await storageReference.getDownloadURL();
+        // Update the book data in Firestore
+        await books
+            .doc(widget.docid) // specify the document ID
+            .update({
+              'title': title.text,
+              'discription': discription.text,
+              'type': type,
+              'imageUrl': imageUrl, // Use imageUrl instead of poster
+            })
+            .then((value) => print("Book updated"))
+            .catchError((error) => print("Failed to update book: $error"));
+      });
+    } else {
+      // Update the book data in Firestore without image
+      await books
+          .doc(widget.docid) // specify the document ID
+          .update({
+            'title': title.text,
+            'discription': discription.text,
+            'type': type,
+          })
+          .then((value) => print("Book updated"))
+          .catchError((error) => print("Failed to update book: $error"));
+    }
+    Get.to(BooksListAdmin()); // Navigate to AdminBookList
   }
 
   @override

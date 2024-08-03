@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertest/Screens/EditBook.dart';
 import 'package:get/get.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class EditedBookCard extends StatelessWidget {
   final String name;
@@ -96,19 +97,40 @@ class EditedBookCard extends StatelessWidget {
                           child: Text('Cancel'),
                         ),
                         btnOk: ElevatedButton(
-                          onPressed: () {
-                            FirebaseFirestore.instance
+                          onPressed: () async {
+                            // Get the image URL from Firestore (assuming it's stored in a field called 'imageUrl')
+                            DocumentSnapshot doc = await FirebaseFirestore
+                                .instance
                                 .collection("books")
                                 .doc(docId)
-                                .delete()
-                                .then((value) {
-                              Navigator.pop(context); // Close the AwesomeDialog
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Book deleted successfully'),
-                                ),
-                              );
-                            });
+                                .get();
+                            String? imageUrl = doc.get('imageUrl');
+
+                            // Delete the book document from Firestore
+                            await FirebaseFirestore.instance
+                                .collection("books")
+                                .doc(docId)
+                                .delete();
+
+                            // Delete the image from Firebase Storage
+                            if (imageUrl != null) {
+                              await FirebaseStorage.instance
+                                  .refFromURL(imageUrl)
+                                  .delete();
+                            }
+
+                            Navigator.pop(context); // Close the AwesomeDialog
+
+                            // Show a snackbar using Get
+                            Get.snackbar(
+                              'Book deleted successfully',
+                              '',
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: const Color(
+                                  0xff2c53b7), // Change the color to blue
+                              colorText: Colors
+                                  .white, // Change the text color to white
+                            );
                           },
                           style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all(

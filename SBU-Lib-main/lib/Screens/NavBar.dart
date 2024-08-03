@@ -4,11 +4,45 @@ import 'package:fluttertest/Screens/bookslist.dart';
 import 'package:fluttertest/Screens/categorieslist.dart';
 import 'package:fluttertest/Screens/collegeslist.dart';
 import 'package:fluttertest/Screens/feedback.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class NavBar extends StatelessWidget {
+class NavBar extends StatefulWidget {
   const NavBar({super.key});
+
+  @override
+  _NavBarState createState() => _NavBarState();
+}
+
+class _NavBarState extends State<NavBar> {
+  User? user = FirebaseAuth.instance.currentUser;
+  DocumentSnapshot<Map<String, dynamic>>? userData;
+  String? selectedCollege;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+  }
+
+  Future<void> fetchUserData() async {
+    if (user != null) {
+      try {
+        DocumentSnapshot<Map<String, dynamic>> snapshot =
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user!.uid)
+                .get();
+        setState(() {
+          userData = snapshot;
+          selectedCollege =
+              snapshot.data()?['selected_college'] ?? 'Not selected';
+        });
+      } catch (e) {
+        print('Error fetching user data: $e');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,26 +52,35 @@ class NavBar extends StatelessWidget {
         child: ListView(
           children: [
             UserAccountsDrawerHeader(
-              accountName: const Text('Ahmed Yassin',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                  )),
-              accountEmail: const Text('Faculty of Engineering at shoubra',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w400,
-                  )),
+              accountName: Text(
+                userData?['firstname'] ?? 'Loading...',
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              accountEmail: Text(
+                selectedCollege ?? 'Loading...',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
               currentAccountPicture: CircleAvatar(
                 child: ClipOval(
-                  child: Align(
-                    child: Image.asset(
-                      'assets/images/ahmed.jpeg',
-                      fit: BoxFit.cover,
-                      width: 90,
-                      height: 90,
-                    ),
-                  ),
+                  child: userData != null && userData!['profile_image'] != null
+                      ? Image.network(
+                          userData!['profile_image'],
+                          fit: BoxFit.cover,
+                          width: 80,
+                          height: 80,
+                        )
+                      : Image.asset(
+                          'assets/images/default-user-icon-23.jpg',
+                          fit: BoxFit.cover,
+                          width: 80,
+                          height: 80,
+                        ),
                 ),
               ),
               decoration: const BoxDecoration(
@@ -52,12 +95,11 @@ class NavBar extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                       color: Color.fromRGBO(53, 37, 85, 1))),
               onTap: () {
-                /// Close Navigation drawer before
                 Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) =>  CategoriesList()),
+                      builder: (context) => const CategoriesList()),
                 );
               },
             ),
@@ -69,7 +111,6 @@ class NavBar extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                       color: Color.fromRGBO(53, 37, 85, 1))),
               onTap: () {
-                /// Close Navigation drawer before
                 Navigator.pop(context);
                 Navigator.push(
                   context,
@@ -85,7 +126,6 @@ class NavBar extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                       color: Color.fromRGBO(53, 37, 85, 1))),
               onTap: () {
-                /// Close Navigation drawer before
                 Navigator.pop(context);
                 Navigator.push(
                   context,
@@ -110,7 +150,6 @@ class NavBar extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                       color: Color.fromRGBO(53, 37, 85, 1))),
               onTap: () {
-                /// Close Navigation drawer before
                 Navigator.pop(context);
                 Navigator.push(
                   context,
@@ -143,9 +182,10 @@ class NavBar extends StatelessWidget {
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
                       color: Color.fromRGBO(53, 37, 85, 1))),
-              onTap: () async{
+              onTap: () async {
                 await FirebaseAuth.instance.signOut();
-                Navigator.of(context).pushNamedAndRemoveUntil("login", (route) => false);
+                Navigator.of(context)
+                    .pushNamedAndRemoveUntil("login", (route) => true);
               },
             ),
           ],

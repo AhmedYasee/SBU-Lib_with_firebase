@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertest/Screens/NavBar.dart';
 import 'package:get/route_manager.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:fluttertest/Screens/NavBar.dart';
@@ -20,21 +20,11 @@ class _AddBookState extends State<AddBook> {
   String? type;
   final ImagePicker _picker = ImagePicker();
   File? _imageFile;
+  String? imageUrl; // To store the image URL
 
   TextEditingController title = TextEditingController();
   TextEditingController discription = TextEditingController();
   CollectionReference books = FirebaseFirestore.instance.collection('books');
-
-      Future<void> addUser() {
-      // Call the user's CollectionReference to add a new user
-      return books
-          .add({
-              'title' : title.text ,
-              'discription': discription.text
-          })
-          .then((value) => print("books Added"))
-          .catchError((error) => print("Failed to add books: $error"));
-    }
 
   Future<void> pickImage() async {
     final XFile? pickedImage =
@@ -46,6 +36,45 @@ class _AddBookState extends State<AddBook> {
     }
   }
 
+  Future<void> addUser() async {
+    if (_imageFile != null) {
+      // Upload the image to Firebase Storage
+      final Reference storageReference = FirebaseStorage.instance
+          .ref()
+          .child('book_images/${DateTime.now().millisecondsSinceEpoch}.jpeg');
+      final metadata = SettableMetadata(
+        contentType: 'image/jpeg',
+        customMetadata: {'uploaded_by': 'your_app_name'},
+      );
+      UploadTask uploadTask = storageReference.putFile(_imageFile!, metadata);
+      await uploadTask.whenComplete(() async {
+        // Get the download URL
+        imageUrl = await storageReference.getDownloadURL();
+        // Add the book data to Firestore
+        await books
+            .add({
+              'title': title.text,
+              'discription': discription.text,
+              'type': type,
+              'imageUrl': imageUrl, // Add image URL to the data
+            })
+            .then((value) => print("books Added"))
+            .catchError((error) => print("Failed to add books: $error"));
+      });
+    } else {
+      // Add the book data to Firestore without image
+      await books
+          .add({
+            'title': title.text,
+            'discription': discription.text,
+            'type': type,
+          })
+          .then((value) => print("books Added"))
+          .catchError((error) => print("Failed to add books: $error"));
+    }
+    Get.back();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -54,12 +83,11 @@ class _AddBookState extends State<AddBook> {
         backgroundColor: Colors.white,
         appBar: AppBar(
           title: const Text(
-            "Add/Edit book in list",
+            "Add book in list",
             style: TextStyle(
               fontWeight: FontWeight.w700,
               color: Color.fromARGB(255, 0, 0, 0),
             ),
-            
           ),
           backgroundColor: Colors.white,
           centerTitle: true,
@@ -110,12 +138,11 @@ class _AddBookState extends State<AddBook> {
                           ),
                         ),
                         TextField(
-                          controller : title,
+                          controller: title,
                           decoration: InputDecoration(
                             fillColor: Colors.grey[200],
                             filled: true,
                           ),
-                          
                         ),
                       ],
                     ),
@@ -153,7 +180,7 @@ class _AddBookState extends State<AddBook> {
                           ),
                         ),
                         TextField(
-                           controller : discription,
+                          controller: discription,
                           decoration: InputDecoration(
                             fillColor: Colors.grey[200],
                             filled: true,
@@ -279,8 +306,20 @@ class _AddBookState extends State<AddBook> {
                 TextButton(
                     onPressed: () {
                       addUser();
-                      Get.back();
                     },
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                            15.0), // Set border radius for circle
+                      ),
+                      side: const BorderSide(
+                        color: Color(0xff2c53b7), // Customize border color
+                        width: 2.0,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 40.0),
+
+                      // Customize border width
+                    ),
                     child: const Row(
                         mainAxisSize:
                             MainAxisSize.min, // Size the row to fit content
@@ -295,20 +334,7 @@ class _AddBookState extends State<AddBook> {
                                   7), // Add some spacing between icon and text
                           Icon(Icons.add_link_rounded,
                               color: Color(0xff2c53b7)),
-                        ]),
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                            15.0), // Set border radius for circle
-                      ),
-                      side: const BorderSide(
-                        color: Color(0xff2c53b7), // Customize border color
-                        width: 2.0,
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 40.0),
-
-                      // Customize border width
-                    ))
+                        ]))
               ],
             ),
           ),

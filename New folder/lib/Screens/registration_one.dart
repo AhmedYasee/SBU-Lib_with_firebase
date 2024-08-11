@@ -85,8 +85,7 @@ class _RegistrationState extends State<Registration> {
             'email': email.text.trim(),
             'phone': phone.text.trim(),
             'profile_image': imageUrl,
-            'selected_college': selectedValue,
-            'role': "admin",
+            'selected_college': selectedValue, // Store the selected value
           });
           AwesomeDialog(
             context: context,

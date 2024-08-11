@@ -11,7 +11,7 @@ class LoginButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Get.to(const login(),
+        Get.to(const Login(),
             transition: Transition.downToUp,
             duration: const Duration(milliseconds: 200));
       },

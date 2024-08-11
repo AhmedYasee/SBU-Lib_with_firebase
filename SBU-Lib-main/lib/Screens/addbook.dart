@@ -101,7 +101,7 @@ class _AddBookState extends State<AddBook> {
                 const SizedBox(height: 0.5),
 
                 const Text(
-                  "Artificial Intelligence",
+                  "New Addition",
                   style: TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.bold,

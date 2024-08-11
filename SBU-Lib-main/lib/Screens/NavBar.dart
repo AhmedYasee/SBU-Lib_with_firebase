@@ -99,7 +99,9 @@ class _NavBarState extends State<NavBar> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const CategoriesList()),
+                      builder: (context) => const CategoriesList(
+                            selectedCollege: '',
+                          )),
                 );
               },
             ),

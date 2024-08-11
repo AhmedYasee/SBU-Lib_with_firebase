@@ -1,19 +1,20 @@
 import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:flutter/material.dart';
+import 'package:fluttertest/Screens/categorieslist.dart';
+import 'package:fluttertest/Screens/collegeslist.dart';
 import 'package:fluttertest/Screens/who_are_you.dart';
 import 'package:fluttertest/component/textfield.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-// ignore: camel_case_types
-class login extends StatefulWidget {
-  const login({super.key});
+class Login extends StatefulWidget {
+  const Login({super.key});
 
   @override
-  State<login> createState() => _loginState();
+  State<Login> createState() => _LoginState();
 }
 
-class _loginState extends State<login> {
+class _LoginState extends State<Login> {
   TextEditingController email = TextEditingController();
   TextEditingController pass = TextEditingController();
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -35,8 +36,8 @@ class _loginState extends State<login> {
     return Scaffold(
       body: SingleChildScrollView(
         child: Form(
+          key: formKey,
           child: Column(
-            key: formKey,
             children: [
               const Stack(
                 children: [
@@ -76,15 +77,64 @@ class _loginState extends State<login> {
               const SizedBox(height: 20),
               TextButton(
                 onPressed: () async {
-                  // if (formKey.currentState!.validate()) {
                   try {
+                    // Sign in with email and password
                     final credential =
                         await FirebaseAuth.instance.signInWithEmailAndPassword(
                       email: email.text,
                       password: pass.text,
                     );
 
-                    Navigator.of(context).pushReplacementNamed('CollegesList');
+                    // Get the user's role from Firestore
+                    User? user = credential.user;
+                    if (user != null) {
+                      DocumentSnapshot userDoc = await FirebaseFirestore
+                          .instance
+                          .collection('users')
+                          .doc(user.uid)
+                          .get();
+
+                      if (userDoc.exists) {
+                        String role = userDoc.get('role');
+                        String selectedCollege =
+                            userDoc.get('selected_college');
+
+                        // Navigate based on role
+                        if (role == 'admin') {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CategoriesList(
+                                  selectedCollege: selectedCollege),
+                            ),
+                          );
+                        } else if (role == 'user') {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CollegesList(),
+                            ),
+                          );
+                        } else {
+                          AwesomeDialog(
+                            context: context,
+                            dialogType: DialogType.error,
+                            animType: AnimType.rightSlide,
+                            title: 'Error',
+                            desc:
+                                'Invalid role detected. Please contact support.',
+                          ).show();
+                        }
+                      } else {
+                        AwesomeDialog(
+                          context: context,
+                          dialogType: DialogType.error,
+                          animType: AnimType.rightSlide,
+                          title: 'Error',
+                          desc: 'User data not found. Please contact support.',
+                        ).show();
+                      }
+                    }
                   } on FirebaseAuthException catch (e) {
                     if (e.code == 'user-not-found') {
                       print('No user found for this email.');
@@ -93,25 +143,28 @@ class _loginState extends State<login> {
                         dialogType: DialogType.error,
                         animType: AnimType.rightSlide,
                         title: 'Error',
-                        desc: ' account already exists for that email.',
+                        desc: 'No account found for this email.',
                       ).show();
                     } else if (e.code == 'wrong-password') {
-                      print('Wron password provided for this user.');
+                      print('Wrong password provided for this user.');
                       AwesomeDialog(
                         context: context,
                         dialogType: DialogType.error,
                         animType: AnimType.rightSlide,
                         title: 'Error',
-                        desc: 'The password provided is too weak.',
+                        desc: 'The password provided is incorrect.',
                       ).show();
                     }
                   } catch (e) {
                     print(e);
+                    AwesomeDialog(
+                      context: context,
+                      dialogType: DialogType.error,
+                      animType: AnimType.rightSlide,
+                      title: 'Error',
+                      desc: 'An unexpected error occurred: $e',
+                    ).show();
                   }
-
-                  // } else {
-                  //   print("Not valid");
-                  // }
                 },
                 child: Container(
                   margin: const EdgeInsets.all(25),
@@ -129,7 +182,7 @@ class _loginState extends State<login> {
                     children: [
                       Text(
                         textAlign: TextAlign.center,
-                        'Login now                       ',
+                        'Login now',
                         style: TextStyle(
                             fontSize: 28,
                             color: Color(0xff2c53b7),

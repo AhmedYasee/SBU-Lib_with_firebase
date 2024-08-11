@@ -1,43 +1,34 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertest/Screens/NavBar.dart';
 import 'package:fluttertest/Screens/categorieslist.dart';
 import 'package:fluttertest/Screens/who_are_you.dart';
 import 'package:fluttertest/component/my_textfield.dart';
 import 'package:fluttertest/component/sumbit.dart';
 import 'package:get/get.dart';
-import 'package:fluttertest/component/my_textfield2.dart';
-import 'package:fluttertest/Screens/NavBar.dart';
-
 
 class AddNewCategory extends StatelessWidget {
-  const AddNewCategory({super.key});
+  final String selectedCollege;
+
+  const AddNewCategory({super.key, required this.selectedCollege});
 
   @override
   Widget build(BuildContext context) {
-    //var text = Text as String;
-    
     TextEditingController name = TextEditingController();
-     CollectionReference categories = FirebaseFirestore.instance.collection('categories');
+    CollectionReference categories = FirebaseFirestore.instance
+        .collection('colleges')
+        .doc(selectedCollege)
+        .collection('categories');
 
-      Future<void> addUser() {
-      // Call the user's CollectionReference to add a new user
+    Future<void> addCategory() {
       return categories
-          .add({
-              'name' : name.text 
-          })
-          .then((value) => print("category Added"))
+          .add({'name': name.text})
+          .then((value) => print("Category Added"))
           .catchError((error) => print("Failed to add category: $error"));
     }
+
     return Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
-         // leading: IconButton(
-          //    onPressed: () {
-          //      Navigator.push(context,
-          //          MaterialPageRoute(builder: (context) => const WHoAreYou()));
-          //    },
-           //   icon: const Icon(Icons.list)),
           title: const Text(
             "Add new Category",
             style: TextStyle(
@@ -48,7 +39,6 @@ class AddNewCategory extends StatelessWidget {
           backgroundColor: Colors.white,
           centerTitle: true,
         ),
-        drawer: const NavBar(),
         body: SingleChildScrollView(
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -74,30 +64,29 @@ class AddNewCategory extends StatelessWidget {
                   child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        Text(
-                          'Tiltle',
+                        const Text(
+                          'Title',
                           style: TextStyle(
                               color: Colors.black,
                               fontSize: 26,
                               fontWeight: FontWeight.w500),
                         ),
-                         MyTextField(
-                icon: Icons.category,
-                text: 'Add Category',
-                val: 'Add New Category',
-                mycontroller: name,
-                validator: (val) {
-                  if (val == "") {
-                    return "Required field ";
-                  }
-                },
-              ),
+                        MyTextField(
+                          icon: Icons.category,
+                          text: 'Add Category',
+                          val: 'Add New Category',
+                          mycontroller: name,
+                          validator: (val) {
+                            if (val == "") {
+                              return "Required field ";
+                            }
+                          },
+                        ),
                       ])),
               SubmitButton(
                 onTap: () {
-                   addUser();
-                  // Navigate back to the previous page
-                   Get.back();
+                  addCategory();
+                  Get.back();
                 },
               ),
             ])));

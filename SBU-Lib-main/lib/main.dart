@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
         debugShowCheckedModeBanner: false,
         routes: {
-          "login": (context) => const login(),
+          "login": (context) => const Login(),
           "Registration": (context) => const Registration(),
           "CollegesList": (context) => const CollegesList(),
         },

@@ -53,7 +53,7 @@ class WHoAreYou extends StatelessWidget {
           CustomButton(
             text: 'Admin         ',
             onTap: () {
-              Get.to(const login());
+              Get.to(const Login());
             },
           ),
           CustomButton(

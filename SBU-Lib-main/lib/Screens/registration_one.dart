@@ -86,7 +86,7 @@ class _RegistrationState extends State<Registration> {
             'phone': phone.text.trim(),
             'profile_image': imageUrl,
             'selected_college': selectedValue,
-            'role': "admin",
+            'role': "admin" /*"user"*/,
           });
           AwesomeDialog(
             context: context,

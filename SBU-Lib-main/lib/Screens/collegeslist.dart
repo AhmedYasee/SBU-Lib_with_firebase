@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertest/Screens/NavBar.dart';
+import 'package:fluttertest/Screens/categorieslistuser.dart';
 import 'package:fluttertest/component/my_textfield2.dart';
 import 'package:fluttertest/component/Colleges_Button.dart';
+import 'package:get/route_manager.dart';
 
 class CollegesList extends StatefulWidget {
   const CollegesList({super.key});
@@ -11,23 +13,25 @@ class CollegesList extends StatefulWidget {
 }
 
 class _CollegesListState extends State<CollegesList> {
-  TextEditingController _searchController = TextEditingController();
-  ValueNotifier<List<String>> _filteredCollegesNotifier = ValueNotifier([]);
-  List<String> _allColleges = [
-    'Faculty of Engineering \nShoubra Branch',
-    'Faculty of medicine',
-    'Faculty of Commerce and \nBusiness Administration',
+  final TextEditingController _searchController = TextEditingController();
+  final ValueNotifier<List<String>> _filteredCollegesNotifier =
+      ValueNotifier([]);
+  final List<String> _allColleges = [
+    'Faculty of Engineering at Shoubra',
+    'Faculty of Engineering at Benha',
+    'Faculty of Medicine',
+    'Faculty of Commerce and Business Administration',
     'Faculty of Law',
     'Faculty of Pharmacy',
     'Faculty of Agriculture',
     'Faculty of Education',
     'Faculty of Arts',
-    'Faculty of Computers \nand Information',
+    'Faculty of Computers and Information',
     'Faculty of Science',
-    'Faculty of Applied \nArts',
-    'Faculty of Special \nEducation',
-    'Faculty of Physical \nEducation',
-    'Faculty of Veterinary \nMedicine',
+    'Faculty of Applied Arts',
+    'Faculty of Special Education',
+    'Faculty of Physical Education',
+    'Faculty of Veterinary Medicine',
     'Faculty of Nursing',
     'Faculty of Physiotherapy'
   ];
@@ -53,12 +57,22 @@ class _CollegesListState extends State<CollegesList> {
     super.dispose();
   }
 
+  void _navigateToCategoriesList(String collegeName) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CategoriesListUser(
+          selectedCollege: collegeName,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Categories List",
+          "Colleges List",
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.black,
@@ -86,6 +100,8 @@ class _CollegesListState extends State<CollegesList> {
                   itemBuilder: (context, index) {
                     return Colleges_Button(
                       text: filteredColleges[index],
+                      onTap: () =>
+                          _navigateToCategoriesList(filteredColleges[index]),
                     );
                   },
                 );

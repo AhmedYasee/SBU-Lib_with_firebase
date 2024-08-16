@@ -18,7 +18,7 @@ class MyDropdownList extends StatefulWidget {
 class _MyDropdownListState extends State<MyDropdownList> {
   String? _selectedItem;
   final Map<String, IconData> collegeIcons = {
-    'Faculty of Engineering': Icons.engineering,
+    'Faculty of Engineering at Benha': Icons.engineering,
     'Faculty of Commerce and Business Administration': Icons.business,
     'Faculty of Law': Icons.gavel,
     'Faculty of Medicine': Icons.local_hospital,

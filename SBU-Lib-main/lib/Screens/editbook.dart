@@ -6,14 +6,21 @@ import 'package:fluttertest/Screens/NavBar.dart';
 import 'package:fluttertest/Screens/booklistadmin.dart';
 import 'package:get/route_manager.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:fluttertest/Screens/NavBar.dart';
 
 class EditBook extends StatefulWidget {
   final String docid;
-  const EditBook({super.key, required this.docid});
+  final String adminId;
+  final String categoryId;
+
+  const EditBook({
+    Key? key,
+    required this.docid,
+    required this.adminId,
+    required this.categoryId,
+  }) : super(key: key);
 
   @override
-  State<EditBook> createState() => _EditBookState();
+  _EditBookState createState() => _EditBookState();
 }
 
 class _EditBookState extends State<EditBook> {
@@ -25,12 +32,10 @@ class _EditBookState extends State<EditBook> {
   File? _imageFile;
 
   TextEditingController title = TextEditingController();
-  TextEditingController discription = TextEditingController();
-  CollectionReference books = FirebaseFirestore.instance.collection('books');
+  TextEditingController description = TextEditingController();
   String? oldTitle;
   String? oldDescription;
   String? oldType;
-  String? oldPoster;
   String? oldImageUrl;
 
   @override
@@ -40,17 +45,27 @@ class _EditBookState extends State<EditBook> {
   }
 
   Future<void> fetchOldData() async {
+    CollectionReference books = FirebaseFirestore.instance
+        .collection('colleges')
+        .doc(widget.adminId)
+        .collection('categories')
+        .doc(widget.categoryId)
+        .collection('books');
+
     DocumentSnapshot documentSnapshot = await books.doc(widget.docid).get();
     if (documentSnapshot.exists) {
       setState(() {
         oldTitle = documentSnapshot.get('title');
-        oldDescription = documentSnapshot.get('discription');
+        oldDescription = documentSnapshot.get('description');
         oldType = documentSnapshot.get('type');
         oldImageUrl =
             documentSnapshot.get('imageUrl'); // Use imageUrl instead of poster
         title.text = oldTitle!;
-        discription.text = oldDescription!;
+        description.text = oldDescription!;
         type = oldType;
+        st1 = type == 'reference';
+        st2 = type == 'paper';
+        st3 = type == 'book';
       });
     }
   }
@@ -65,8 +80,20 @@ class _EditBookState extends State<EditBook> {
     }
   }
 
-  Future<void> updateBook(String documentId) async {
-    // Call the user's CollectionReference to update a document
+  Future<void> updateBook() async {
+    CollectionReference books = FirebaseFirestore.instance
+        .collection('colleges')
+        .doc(widget.adminId)
+        .collection('categories')
+        .doc(widget.categoryId)
+        .collection('books');
+
+    Map<String, dynamic> bookData = {
+      'title': title.text,
+      'description': description.text,
+      'type': type,
+    };
+
     if (_imageFile != null) {
       // Delete the old image
       if (oldImageUrl != null) {
@@ -88,30 +115,25 @@ class _EditBookState extends State<EditBook> {
         // Get the download URL
         String imageUrl = await storageReference.getDownloadURL();
         // Update the book data in Firestore
+        bookData['imageUrl'] = imageUrl; // Use imageUrl instead of poster
         await books
-            .doc(widget.docid) // specify the document ID
-            .update({
-              'title': title.text,
-              'discription': discription.text,
-              'type': type,
-              'imageUrl': imageUrl, // Use imageUrl instead of poster
-            })
+            .doc(widget.docid)
+            .update(bookData)
             .then((value) => print("Book updated"))
             .catchError((error) => print("Failed to update book: $error"));
       });
     } else {
       // Update the book data in Firestore without image
       await books
-          .doc(widget.docid) // specify the document ID
-          .update({
-            'title': title.text,
-            'discription': discription.text,
-            'type': type,
-          })
+          .doc(widget.docid)
+          .update(bookData)
           .then((value) => print("Book updated"))
           .catchError((error) => print("Failed to update book: $error"));
     }
-    Get.to(BooksListAdmin()); // Navigate to AdminBookList
+    Get.to(() => BooksListAdmin(
+          adminId: widget.adminId,
+          categoryId: widget.categoryId,
+        )); // Navigate to BooksListAdmin
   }
 
   @override
@@ -122,7 +144,7 @@ class _EditBookState extends State<EditBook> {
         backgroundColor: Colors.white,
         appBar: AppBar(
           title: const Text(
-            "Edit book in list",
+            "Edit Book",
             style: TextStyle(
               fontWeight: FontWeight.w700,
               color: Color.fromARGB(255, 0, 0, 0),
@@ -138,9 +160,8 @@ class _EditBookState extends State<EditBook> {
             child: Column(
               children: [
                 const SizedBox(height: 0.5),
-
                 const Text(
-                  "Artificial Intelligence",
+                  "Edit Book Details",
                   style: TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.bold,
@@ -187,11 +208,7 @@ class _EditBookState extends State<EditBook> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20.0), //one
-
-                const Padding(
-                  padding: EdgeInsets.all(10),
-                ),
+                const SizedBox(height: 20.0),
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -219,7 +236,7 @@ class _EditBookState extends State<EditBook> {
                           ),
                         ),
                         TextField(
-                          controller: discription,
+                          controller: description,
                           decoration: InputDecoration(
                             fillColor: Colors.grey[200],
                             filled: true,
@@ -229,11 +246,7 @@ class _EditBookState extends State<EditBook> {
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 20.0), //twoo
-                const Padding(
-                  padding: EdgeInsets.all(10),
-                ),
+                const SizedBox(height: 20.0),
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -263,7 +276,7 @@ class _EditBookState extends State<EditBook> {
                         RadioListTile(
                             activeColor: const Color.fromARGB(255, 16, 42, 108),
                             title: const Text("Book"),
-                            value: "Book",
+                            value: "book",
                             groupValue: type,
                             onChanged: (val) {
                               setState(() {
@@ -273,8 +286,8 @@ class _EditBookState extends State<EditBook> {
                         RadioListTile(
                             activeColor: const Color.fromARGB(255, 16, 42, 108),
                             title: const Text("Paper"),
+                            value: "paper",
                             groupValue: type,
-                            value: "Paper",
                             onChanged: (val) {
                               setState(() {
                                 type = val!;
@@ -283,8 +296,8 @@ class _EditBookState extends State<EditBook> {
                         RadioListTile(
                             activeColor: const Color.fromARGB(255, 16, 42, 108),
                             title: const Text("Reference"),
+                            value: "reference",
                             groupValue: type,
-                            value: "Reference",
                             onChanged: (val) {
                               setState(() {
                                 type = val!;
@@ -295,9 +308,6 @@ class _EditBookState extends State<EditBook> {
                   ),
                 ),
                 const SizedBox(height: 20.0),
-                const Padding(
-                  padding: EdgeInsets.all(10),
-                ),
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -325,29 +335,24 @@ class _EditBookState extends State<EditBook> {
                           ),
                         ),
                         _imageFile == null
-                            ? const Text('No image selected')
+                            ? (oldImageUrl != null
+                                ? Image.network(oldImageUrl!)
+                                : const Text('No image selected'))
                             : Image.file(_imageFile!),
                         IconButton(
                           icon: const Icon(
                             Icons.photo_size_select_actual_rounded,
                             color: Color.fromARGB(255, 16, 42, 108),
-                          ), // Use your desired icon
+                          ),
                           onPressed: pickImage,
                         ),
                       ],
                     ),
                   ),
                 ),
-                //twoo
-                const Padding(
-                  padding: EdgeInsets.all(10),
-                ),
+                const SizedBox(height: 20.0),
                 TextButton(
-                    onPressed: () {
-                      updateBook(
-                          widget.docid); // Replace with the actual document ID
-                      Get.back();
-                    },
+                    onPressed: updateBook,
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15.0),
@@ -357,14 +362,12 @@ class _EditBookState extends State<EditBook> {
                         width: 2.0,
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 40.0),
-
-                      // Customize border width
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Edit',
+                          'Update',
                           style: TextStyle(
                               fontSize: 30.0, color: Color(0xff2c53b7)),
                         ),

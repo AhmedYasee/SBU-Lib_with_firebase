@@ -100,6 +100,8 @@ class _CategoriesListState extends State<CategoriesList> {
                       return Category_Button(
                         text: doc[
                             'name'], // Assuming 'name' is the field in the document
+                        adminId: widget.selectedCollege,
+                        categoryId: doc.id,
                       );
                     },
                   ),

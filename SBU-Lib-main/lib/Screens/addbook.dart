@@ -2,15 +2,22 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertest/Screens/NavBar.dart';
 import 'package:get/route_manager.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:fluttertest/Screens/NavBar.dart';
 
 class AddBook extends StatefulWidget {
-  const AddBook({super.key});
+  final String adminId;
+  final String categoryId;
+
+  const AddBook({
+    Key? key,
+    required this.adminId,
+    required this.categoryId,
+  }) : super(key: key);
 
   @override
-  State<AddBook> createState() => _AddBookState();
+  _AddBookState createState() => _AddBookState();
 }
 
 class _AddBookState extends State<AddBook> {
@@ -23,8 +30,7 @@ class _AddBookState extends State<AddBook> {
   String? imageUrl; // To store the image URL
 
   TextEditingController title = TextEditingController();
-  TextEditingController discription = TextEditingController();
-  CollectionReference books = FirebaseFirestore.instance.collection('books');
+  TextEditingController description = TextEditingController();
 
   Future<void> pickImage() async {
     final XFile? pickedImage =
@@ -36,7 +42,14 @@ class _AddBookState extends State<AddBook> {
     }
   }
 
-  Future<void> addUser() async {
+  Future<void> addBook() async {
+    CollectionReference books = FirebaseFirestore.instance
+        .collection('colleges')
+        .doc(widget.adminId)
+        .collection('categories')
+        .doc(widget.categoryId)
+        .collection('books');
+
     if (_imageFile != null) {
       // Upload the image to Firebase Storage
       final Reference storageReference = FirebaseStorage.instance
@@ -54,23 +67,23 @@ class _AddBookState extends State<AddBook> {
         await books
             .add({
               'title': title.text,
-              'discription': discription.text,
+              'description': description.text,
               'type': type,
               'imageUrl': imageUrl, // Add image URL to the data
             })
-            .then((value) => print("books Added"))
-            .catchError((error) => print("Failed to add books: $error"));
+            .then((value) => print("Book Added"))
+            .catchError((error) => print("Failed to add book: $error"));
       });
     } else {
       // Add the book data to Firestore without image
       await books
           .add({
             'title': title.text,
-            'discription': discription.text,
+            'description': description.text,
             'type': type,
           })
-          .then((value) => print("books Added"))
-          .catchError((error) => print("Failed to add books: $error"));
+          .then((value) => print("Book Added"))
+          .catchError((error) => print("Failed to add book: $error"));
     }
     Get.back();
   }
@@ -83,7 +96,7 @@ class _AddBookState extends State<AddBook> {
         backgroundColor: Colors.white,
         appBar: AppBar(
           title: const Text(
-            "Add book in list",
+            "Add Book to List",
             style: TextStyle(
               fontWeight: FontWeight.w700,
               color: Color.fromARGB(255, 0, 0, 0),
@@ -92,14 +105,13 @@ class _AddBookState extends State<AddBook> {
           backgroundColor: Colors.white,
           centerTitle: true,
         ),
-        drawer: const NavBar(),
+        drawer: const NavBar(), // Replace with your actual NavBar widget
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: SingleChildScrollView(
             child: Column(
               children: [
                 const SizedBox(height: 0.5),
-
                 const Text(
                   "New Addition",
                   style: TextStyle(
@@ -148,8 +160,7 @@ class _AddBookState extends State<AddBook> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20.0), //one
-
+                const SizedBox(height: 20.0),
                 const Padding(
                   padding: EdgeInsets.all(10),
                 ),
@@ -180,7 +191,7 @@ class _AddBookState extends State<AddBook> {
                           ),
                         ),
                         TextField(
-                          controller: discription,
+                          controller: description,
                           decoration: InputDecoration(
                             fillColor: Colors.grey[200],
                             filled: true,
@@ -190,75 +201,78 @@ class _AddBookState extends State<AddBook> {
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 20.0), //twoo
-                const Padding(
-                  padding: EdgeInsets.all(10),
-                ),
+                const SizedBox(height: 20.0),
                 Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(
-                        color: const Color.fromARGB(255, 168, 165, 165)),
-                    borderRadius: BorderRadius.circular(8.0),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color.fromARGB(255, 154, 154, 154),
-                        spreadRadius: 1,
-                        blurRadius: 7,
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: st1,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                type = 'reference';
+                                st1 = value!;
+                                st2 = false;
+                                st3 = false;
+                              });
+                            },
+                          ),
+                          const Text(
+                            'Reference',
+                            style: TextStyle(
+                              fontSize: 18.0,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: st2,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                type = 'paper';
+                                st2 = value!;
+                                st1 = false;
+                                st3 = false;
+                              });
+                            },
+                          ),
+                          const Text(
+                            'Paper',
+                            style: TextStyle(
+                              fontSize: 18.0,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: st3,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                type = 'book';
+                                st3 = value!;
+                                st1 = false;
+                                st2 = false;
+                              });
+                            },
+                          ),
+                          const Text(
+                            'Book',
+                            style: TextStyle(
+                              fontSize: 18.0,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      children: [
-                        const Text(
-                          'Choose the type please',
-                          style: TextStyle(
-                            fontSize: 20.0,
-                            color: Color(0xff2c53b7),
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        RadioListTile(
-                            activeColor: const Color.fromARGB(255, 16, 42, 108),
-                            title: const Text("Book"),
-                            value: "Book",
-                            groupValue: type,
-                            onChanged: (val) {
-                              setState(() {
-                                type = val!;
-                              });
-                            }),
-                        RadioListTile(
-                            activeColor: const Color.fromARGB(255, 16, 42, 108),
-                            title: const Text("Paper"),
-                            groupValue: type,
-                            value: "Paper",
-                            onChanged: (val) {
-                              setState(() {
-                                type = val!;
-                              });
-                            }),
-                        RadioListTile(
-                            activeColor: const Color.fromARGB(255, 16, 42, 108),
-                            title: const Text("Reference"),
-                            groupValue: type,
-                            value: "Reference",
-                            onChanged: (val) {
-                              setState(() {
-                                type = val!;
-                              });
-                            })
-                      ],
-                    ),
-                  ),
                 ),
                 const SizedBox(height: 20.0),
-                const Padding(
-                  padding: EdgeInsets.all(10),
-                ),
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -286,55 +300,46 @@ class _AddBookState extends State<AddBook> {
                           ),
                         ),
                         _imageFile == null
-                            ? const Text('No image selected')
-                            : Image.file(_imageFile!),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.photo_size_select_actual_rounded,
-                            color: Color.fromARGB(255, 16, 42, 108),
-                          ), // Use your desired icon
-                          onPressed: pickImage,
-                        ),
+                            ? Center(
+                                child: IconButton(
+                                  icon: Icon(Icons.add_a_photo),
+                                  onPressed: pickImage,
+                                ),
+                              )
+                            : Image.file(
+                                _imageFile!,
+                                fit: BoxFit.cover,
+                              ),
                       ],
                     ),
                   ),
                 ),
-                //twoo
-                const Padding(
-                  padding: EdgeInsets.all(10),
-                ),
-                TextButton(
-                    onPressed: () {
-                      addUser();
-                    },
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                            15.0), // Set border radius for circle
-                      ),
-                      side: const BorderSide(
-                        color: Color(0xff2c53b7), // Customize border color
-                        width: 2.0,
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 40.0),
-
-                      // Customize border width
+                const SizedBox(height: 20.0),
+                ElevatedButton(
+                  onPressed: addBook,
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15.0),
                     ),
-                    child: const Row(
-                        mainAxisSize:
-                            MainAxisSize.min, // Size the row to fit content
-                        children: [
-                          Text(
-                            'Add',
-                            style: TextStyle(
-                                fontSize: 30.0, color: Color(0xff2c53b7)),
-                          ),
-                          SizedBox(
-                              width:
-                                  7), // Add some spacing between icon and text
-                          Icon(Icons.add_link_rounded,
-                              color: Color(0xff2c53b7)),
-                        ]))
+                    side: const BorderSide(
+                      color: Color(0xff2c53b7),
+                      width: 2.0,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Add Book',
+                        style:
+                            TextStyle(fontSize: 30.0, color: Color(0xff2c53b7)),
+                      ),
+                      SizedBox(width: 7),
+                      Icon(Icons.add, color: Color(0xff2c53b7)),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

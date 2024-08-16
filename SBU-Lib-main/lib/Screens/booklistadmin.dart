@@ -2,16 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:fluttertest/Screens/AddBook.dart';
 import 'package:fluttertest/Screens/NavBar.dart';
 import 'package:fluttertest/Screens/editbook.dart';
-import 'package:fluttertest/Screens/who_are_you.dart';
 import 'package:fluttertest/component/add_button.dart';
 import 'package:fluttertest/component/editedbookcard.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../component/my_textfield.dart';
-import 'package:fluttertest/component/my_textfield2.dart';
+import '../component/my_textfield2.dart';
 
 class BooksListAdmin extends StatefulWidget {
-  const BooksListAdmin({Key? key}) : super(key: key);
+  final String adminId;
+  final String categoryId;
+
+  const BooksListAdmin({
+    Key? key,
+    required this.adminId,
+    required this.categoryId,
+  }) : super(key: key);
 
   @override
   _BooksListAdminState createState() => _BooksListAdminState();
@@ -20,7 +25,13 @@ class BooksListAdmin extends StatefulWidget {
 class _BooksListAdminState extends State<BooksListAdmin> {
   // Stream of QuerySnapshot from Firestore
   Stream<QuerySnapshot> streamData() {
-    return FirebaseFirestore.instance.collection("books").snapshots();
+    return FirebaseFirestore.instance
+        .collection('colleges')
+        .doc(widget.adminId)
+        .collection('categories')
+        .doc(widget.categoryId)
+        .collection('books')
+        .snapshots();
   }
 
   @override
@@ -62,21 +73,28 @@ class _BooksListAdminState extends State<BooksListAdmin> {
                       var doc = snapshot.data!.docs[index];
                       return EditedBookCard(
                         name: doc['title'],
+                        adminId: widget.adminId,
+                        categoryId: widget.categoryId,
                         docId: doc.id, // Get the document ID
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => EditBook(
-                                      docid: doc.id,
-                                    )),
+                              builder: (context) => EditBook(
+                                docid: doc.id,
+                                adminId: widget.adminId,
+                                categoryId: widget.categoryId,
+                              ),
+                            ),
                           );
                         },
                       );
                     },
                   );
                 } else {
-                  return const SizedBox(); // Return an empty container when there's no data
+                  return const Center(
+                    child: Text("No books available."),
+                  );
                 }
               },
             ),
@@ -84,7 +102,12 @@ class _BooksListAdminState extends State<BooksListAdmin> {
           AddButton(
             text: "Add new book",
             onTap: () {
-              Get.to(const AddBook());
+              Get.to(
+                AddBook(
+                  adminId: widget.adminId,
+                  categoryId: widget.categoryId,
+                ),
+              );
             },
           ),
         ],

@@ -50,10 +50,10 @@ class _BooksDetailsState extends State<BooksDetails> {
           "Book Details",
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.black,
+            color: Colors.white,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.blueAccent,
         centerTitle: true,
         elevation: 0,
       ),
@@ -73,11 +73,12 @@ class _BooksDetailsState extends State<BooksDetails> {
                         Icon(
                           Icons.arrow_back_ios_new_outlined,
                           size: 24,
-                          color: Colors.black,
+                          color: Colors.blueAccent,
                         ),
                         Text(
-                          "   Previous",
-                          style: TextStyle(fontSize: 20, color: Colors.black),
+                          "   Back",
+                          style:
+                              TextStyle(fontSize: 20, color: Colors.blueAccent),
                         ),
                       ],
                     ),
@@ -88,15 +89,29 @@ class _BooksDetailsState extends State<BooksDetails> {
                     children: [
                       // Book Cover
                       Container(
-                        width: 210, // Width of A4 size in portrait mode
-                        height: 297, // Height of A4 size in portrait mode
+                        width: 150,
+                        height: 200,
                         margin: const EdgeInsets.only(right: 16.0),
-                        child: Image.network(
-                          bookData!['imageUrl'] ??
-                              'https://via.placeholder.com/150',
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Image.asset('assets/placeholder.png'),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.5),
+                              spreadRadius: 2,
+                              blurRadius: 7,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            bookData!['imageUrl'] ??
+                                'https://via.placeholder.com/150',
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Image.asset('assets/placeholder.png'),
+                          ),
                         ),
                       ),
                       // Book Details
@@ -109,13 +124,21 @@ class _BooksDetailsState extends State<BooksDetails> {
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 24,
+                                color: Colors.black87,
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 8),
                             // Placeholder for Rating Stars
-                            Placeholder(
-                              fallbackHeight: 30,
-                              color: Colors.blueGrey,
+                            Row(
+                              children: List.generate(5, (index) {
+                                return Icon(
+                                  Icons.star,
+                                  color: index < (bookData?['rating'] ?? 0)
+                                      ? Colors.yellow
+                                      : Colors.grey,
+                                  size: 20,
+                                );
+                              }),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -123,9 +146,10 @@ class _BooksDetailsState extends State<BooksDetails> {
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
+                                color: Colors.black87,
                               ),
                             ),
-                            const Divider(),
+                            const Divider(thickness: 2),
                             Padding(
                               padding:
                                   const EdgeInsets.symmetric(vertical: 8.0),
@@ -153,11 +177,15 @@ class _BooksDetailsState extends State<BooksDetails> {
                       label: const Text('Borrow This Book'),
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white,
-                        backgroundColor: Colors.blue,
+                        backgroundColor: Colors.blueAccent,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 24.0,
                           vertical: 12.0,
                         ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        elevation: 5,
                       ),
                     ),
                   ),

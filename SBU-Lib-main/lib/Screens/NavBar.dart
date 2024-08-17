@@ -1,11 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertest/Screens/bookslist.dart';
 import 'package:fluttertest/Screens/categorieslist.dart';
+import 'package:fluttertest/Screens/categorieslistuser.dart';
 import 'package:fluttertest/Screens/collegeslist.dart';
 import 'package:fluttertest/Screens/feedback.dart';
-import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NavBar extends StatefulWidget {
   const NavBar({super.key});
@@ -16,32 +16,68 @@ class NavBar extends StatefulWidget {
 
 class _NavBarState extends State<NavBar> {
   User? user = FirebaseAuth.instance.currentUser;
-  DocumentSnapshot<Map<String, dynamic>>? userData;
+  Map<String, dynamic>? userData;
   String? selectedCollege;
+  String? userRole;
 
   @override
   void initState() {
     super.initState();
-    fetchUserData();
+    _fetchUserData();
   }
 
-  Future<void> fetchUserData() async {
-    if (user != null) {
-      try {
-        DocumentSnapshot<Map<String, dynamic>> snapshot =
-            await FirebaseFirestore.instance
-                .collection('users')
-                .doc(user!.uid)
-                .get();
-        setState(() {
-          userData = snapshot;
-          selectedCollege =
-              snapshot.data()?['selected_college'] ?? 'Not selected';
-        });
-      } catch (e) {
-        print('Error fetching user data: $e');
+  Future<void> _fetchUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? localRole = prefs.getString('userRole');
+    String? localCollege = prefs.getString('selectedCollege');
+    String? localName = prefs.getString('firstname');
+    String? localProfileImage = prefs.getString('profileImage');
+
+    if (localRole != null && localCollege != null && localName != null) {
+      // Use local data if available
+      setState(() {
+        userRole = localRole;
+        selectedCollege = localCollege;
+        userData = {
+          'firstname': localName,
+          'profile_image': localProfileImage,
+        };
+      });
+    } else {
+      // Fetch from Firebase if local data does not exist
+      if (user != null) {
+        try {
+          DocumentSnapshot<Map<String, dynamic>> snapshot =
+              await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(user!.uid)
+                  .get();
+          setState(() {
+            userData = snapshot.data();
+            selectedCollege = userData?['selected_college'] ?? 'Not selected';
+            userRole = userData?['role'] ?? 'user';
+
+            // Store data locally
+            prefs.setString('userRole', userRole!);
+            prefs.setString('selectedCollege', selectedCollege!);
+            prefs.setString(
+                'firstname', userData?['firstname'] ?? 'Loading...');
+            prefs.setString('profileImage', userData?['profile_image'] ?? '');
+          });
+        } catch (e) {
+          print('Error fetching user data: $e');
+        }
       }
     }
+  }
+
+  Future<void> _logout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    // Clear cached user data on logout
+    await prefs.clear();
+
+    await FirebaseAuth.instance.signOut();
+    Navigator.of(context).pushNamedAndRemoveUntil("login", (route) => false);
   }
 
   @override
@@ -87,116 +123,179 @@ class _NavBarState extends State<NavBar> {
                 color: Color(0xff2c53b7),
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.category_sharp),
-              title: const Text('Categories',
-                  style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w500,
-                      color: Color.fromRGBO(53, 37, 85, 1))),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const CategoriesList(
-                            selectedCollege: '',
-                          )),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.list_alt_rounded),
-              title: const Text('Books Lists',
-                  style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w500,
-                      color: Color.fromRGBO(53, 37, 85, 1))),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const BooksList(
-                            adminId: '',
-                            categoryId: '',
-                          )),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.person_add_alt_rounded),
-              title: const Text('Colleges',
-                  style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w500,
-                      color: Color.fromRGBO(53, 37, 85, 1))),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const CollegesList()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.favorite_border_outlined),
-              title: const Text('Suggestions',
-                  style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w500,
-                      color: Color.fromRGBO(53, 37, 85, 1))),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: const Icon(Icons.feedback_outlined),
-              title: const Text('Feed Back',
-                  style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w500,
-                      color: Color.fromRGBO(53, 37, 85, 1))),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const FeedBack()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.support_agent_rounded),
-              title: const Text('Support',
-                  style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w500,
-                      color: Color.fromRGBO(53, 37, 85, 1))),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings',
-                  style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w500,
-                      color: Color.fromRGBO(53, 37, 85, 1))),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout_rounded),
-              title: const Text('Logout',
-                  style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w500,
-                      color: Color.fromRGBO(53, 37, 85, 1))),
-              onTap: () async {
-                await FirebaseAuth.instance.signOut();
-                Navigator.of(context)
-                    .pushNamedAndRemoveUntil("login", (route) => true);
-              },
-            ),
+            ..._buildNavItems(),
           ],
         ),
       ),
     );
+  }
+
+  List<Widget> _buildNavItems() {
+    if (userRole == 'admin') {
+      return [
+        ListTile(
+          leading: const Icon(Icons.category_sharp),
+          title: const Text('Categories',
+              style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: Color.fromRGBO(53, 37, 85, 1))),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => CategoriesList(
+                        selectedCollege: selectedCollege ?? '',
+                      )),
+            );
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.person_add_alt_rounded),
+          title: const Text('Colleges',
+              style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: Color.fromRGBO(53, 37, 85, 1))),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const CollegesList()),
+            );
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.feedback_outlined),
+          title: const Text('Feedback',
+              style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: Color.fromRGBO(53, 37, 85, 1))),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const FeedBack()),
+            );
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.support_agent_rounded),
+          title: const Text('Support',
+              style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: Color.fromRGBO(53, 37, 85, 1))),
+          onTap: () {},
+        ),
+        ListTile(
+          leading: const Icon(Icons.settings),
+          title: const Text('Settings',
+              style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: Color.fromRGBO(53, 37, 85, 1))),
+          onTap: () {},
+        ),
+        ListTile(
+          leading: const Icon(Icons.logout_rounded),
+          title: const Text('Logout',
+              style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: Color.fromRGBO(53, 37, 85, 1))),
+          onTap: _logout,
+        ),
+      ];
+    } else {
+      return [
+        ListTile(
+          leading: const Icon(Icons.category_sharp),
+          title: const Text('Categories',
+              style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: Color.fromRGBO(53, 37, 85, 1))),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => CategoriesListUser(
+                        selectedCollege: selectedCollege ?? '',
+                      )),
+            );
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.person_add_alt_rounded),
+          title: const Text('Colleges',
+              style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: Color.fromRGBO(53, 37, 85, 1))),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const CollegesList()),
+            );
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.favorite_border_outlined),
+          title: const Text('Suggestions',
+              style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: Color.fromRGBO(53, 37, 85, 1))),
+          onTap: () {},
+        ),
+        ListTile(
+          leading: const Icon(Icons.feedback_outlined),
+          title: const Text('Feedback',
+              style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: Color.fromRGBO(53, 37, 85, 1))),
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const FeedBack()),
+            );
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.support_agent_rounded),
+          title: const Text('Support',
+              style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: Color.fromRGBO(53, 37, 85, 1))),
+          onTap: () {},
+        ),
+        ListTile(
+          leading: const Icon(Icons.settings),
+          title: const Text('Settings',
+              style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: Color.fromRGBO(53, 37, 85, 1))),
+          onTap: () {},
+        ),
+        ListTile(
+          leading: const Icon(Icons.logout_rounded),
+          title: const Text('Logout',
+              style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                  color: Color.fromRGBO(53, 37, 85, 1))),
+          onTap: _logout,
+        ),
+      ];
+    }
   }
 }

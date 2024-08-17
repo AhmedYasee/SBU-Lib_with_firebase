@@ -116,7 +116,11 @@ class _NavBarState extends State<NavBar> {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const BooksList()),
+                  MaterialPageRoute(
+                      builder: (context) => const BooksList(
+                            adminId: '',
+                            categoryId: '',
+                          )),
                 );
               },
             ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertest/Screens/NavBar.dart';
 import 'package:fluttertest/Screens/addnewcategory.dart';
 import 'package:fluttertest/component/add_button.dart';
-import 'package:fluttertest/component/categorybutton.dart';
+import 'package:fluttertest/component/categorybuttonuser.dart';
 import 'package:fluttertest/component/my_textfield2.dart';
 import 'package:get/route_manager.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -97,7 +97,7 @@ class _CategoriesListUserState extends State<CategoriesListUser> {
                     itemCount: _filteredCategories.length,
                     itemBuilder: (context, index) {
                       var doc = _filteredCategories[index];
-                      return Category_Button(
+                      return Category_Button_User(
                         text: doc[
                             'name'], // Assuming 'name' is the field in the document
                         adminId: widget.selectedCollege,

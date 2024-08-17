@@ -4,7 +4,14 @@ import 'package:fluttertest/component/bookcard.dart';
 import 'package:fluttertest/component/my_textfield2.dart';
 
 class BooksList extends StatefulWidget {
-  const BooksList({Key? key}) : super(key: key);
+  final String adminId; // College name
+  final String categoryId; // Category ID
+
+  const BooksList({
+    Key? key,
+    required this.adminId,
+    required this.categoryId,
+  }) : super(key: key);
 
   @override
   _BooksListState createState() => _BooksListState();
@@ -12,7 +19,8 @@ class BooksList extends StatefulWidget {
 
 class _BooksListState extends State<BooksList> {
   TextEditingController _searchController = TextEditingController();
-  ValueNotifier<List<DocumentSnapshot>> _filteredBooksNotifier = ValueNotifier([]);
+  ValueNotifier<List<DocumentSnapshot>> _filteredBooksNotifier =
+      ValueNotifier([]);
   List<DocumentSnapshot> _allBooks = [];
 
   @override
@@ -23,7 +31,14 @@ class _BooksListState extends State<BooksList> {
   }
 
   void _fetchBooks() {
-    FirebaseFirestore.instance.collection("books").get().then((snapshot) {
+    FirebaseFirestore.instance
+        .collection('colleges')
+        .doc(widget.adminId)
+        .collection('categories')
+        .doc(widget.categoryId)
+        .collection('books')
+        .get()
+        .then((snapshot) {
       _allBooks = snapshot.docs;
       _filteredBooksNotifier.value = _allBooks;
     });
@@ -42,8 +57,8 @@ class _BooksListState extends State<BooksList> {
       return aName.toLowerCase().startsWith(query)
           ? -1
           : bName.toLowerCase().startsWith(query)
-          ? 1
-          : 0;
+              ? 1
+              : 0;
     });
   }
 
@@ -87,7 +102,11 @@ class _BooksListState extends State<BooksList> {
                   itemBuilder: (context, index) {
                     var doc = filteredBooks[index];
                     return BookCard(
-                      name: doc['title'], // Assuming 'title' is the field in the document
+                      bookId: doc.id,
+                      adminId: widget.adminId,
+                      categoryId: widget.categoryId,
+                      name: doc[
+                          'title'], // Assuming 'title' is the field in the document
                     );
                   },
                 );

@@ -53,20 +53,30 @@ class _EditBookState extends State<EditBook> {
         .collection('books');
 
     DocumentSnapshot documentSnapshot = await books.doc(widget.docid).get();
+
     if (documentSnapshot.exists) {
+      var data = documentSnapshot.data() as Map<String, dynamic>?;
+
       setState(() {
-        oldTitle = documentSnapshot.get('title');
-        oldDescription = documentSnapshot.get('description');
-        oldType = documentSnapshot.get('type');
-        oldImageUrl =
-            documentSnapshot.get('imageUrl'); // Use imageUrl instead of poster
-        title.text = oldTitle!;
-        description.text = oldDescription!;
+        // Fetch data and provide a default value if the field is missing
+        oldTitle = data?['title'] ?? '';
+        oldDescription = data?['description'] ?? '';
+        oldType = data?['type'] ?? '';
+        oldImageUrl = data?['imageUrl'] ?? null; // Allow null for images
+
+        title.text = oldTitle ?? ''; // Set the text field controller
+        description.text =
+            oldDescription ?? ''; // Set the text field controller
         type = oldType;
+
+        // Handle the selection of the radio buttons based on the fetched type
         st1 = type == 'reference';
         st2 = type == 'paper';
         st3 = type == 'book';
       });
+    } else {
+      // Handle the case where the document does not exist
+      print('Document does not exist on the database');
     }
   }
 
@@ -139,26 +149,25 @@ class _EditBookState extends State<EditBook> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          title: const Text(
-            "Edit Book",
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              color: Color.fromARGB(255, 0, 0, 0),
-            ),
-          ),
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
           backgroundColor: Colors.white,
-          centerTitle: true,
-        ),
-        drawer: const NavBar(),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
+          appBar: AppBar(
+            title: const Text(
+              "Edit Book",
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: Color.fromARGB(255, 0, 0, 0),
+              ),
+            ),
+            backgroundColor: Colors.white,
+            centerTitle: true,
+          ),
+          drawer: const NavBar(),
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SingleChildScrollView(
+              child: Column(children: [
                 const SizedBox(height: 0.5),
                 const Text(
                   "Edit Book Details",
@@ -302,12 +311,21 @@ class _EditBookState extends State<EditBook> {
                               setState(() {
                                 type = val!;
                               });
-                            })
+                            }),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 20.0),
+                const Text(
+                  "Edit Book Image",
+                  style: TextStyle(
+                    fontSize: 20.0,
+                    color: Color(0xff2c53b7),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 10.0),
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -326,6 +344,11 @@ class _EditBookState extends State<EditBook> {
                     padding: const EdgeInsets.all(8.0),
                     child: Column(
                       children: [
+                        _imageFile == null
+                            ? (oldImageUrl != null
+                                ? Image.network(oldImageUrl!)
+                                : const Text('No image selected'))
+                            : Image.file(_imageFile!),
                         const Text(
                           'Upload the poster',
                           style: TextStyle(
@@ -334,11 +357,6 @@ class _EditBookState extends State<EditBook> {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        _imageFile == null
-                            ? (oldImageUrl != null
-                                ? Image.network(oldImageUrl!)
-                                : const Text('No image selected'))
-                            : Image.file(_imageFile!),
                         IconButton(
                           icon: const Icon(
                             Icons.photo_size_select_actual_rounded,
@@ -375,11 +393,9 @@ class _EditBookState extends State<EditBook> {
                         Icon(Icons.edit_document, color: Color(0xff2c53b7)),
                       ],
                     )),
-              ],
+              ]),
             ),
           ),
-        ),
-      ),
-    );
+        ));
   }
 }

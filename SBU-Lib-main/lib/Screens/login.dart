@@ -19,6 +19,7 @@ class _LoginState extends State<Login> {
   TextEditingController email = TextEditingController();
   TextEditingController pass = TextEditingController();
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  bool _obscureText = true; // Manage visibility of the password
 
   @override
   void initState() {
@@ -49,35 +50,73 @@ class _LoginState extends State<Login> {
                 ],
               ),
               const SizedBox(height: 20),
-              MyTextField(
-                icon: Icons.email,
-                text: 'Email',
-                obscure: false, // Email field should not be obscured
-                val: 'enter your e-mail',
-                mycontroller: email,
-                validator: (val) {
-                  if (val == null || val.isEmpty) {
-                    return "Required field";
-                  }
-                  return null;
-                },
+              // Email TextField
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 25),
+                child: MyTextField(
+                  icon: Icons.email,
+                  text: 'Email',
+                  obscure: false, // Email field should not be obscured
+                  val: 'enter your e-mail',
+                  mycontroller: email,
+                  validator: (val) {
+                    if (val == null || val.isEmpty) {
+                      return "Required field";
+                    }
+                    return null;
+                  },
+                ),
               ),
               const SizedBox(height: 20),
-              MyTextField(
-
-                obscure: true,
-                // Password field should be obscured
-                icon: Icons.lock,
-                text: 'Password',
-                val: 'enter your password',
-                mycontroller: pass,
-                validator: (val) {
-                  if (val == null || val.isEmpty) {
-                    return "Required field";
-                  }
-                  return null;
-                },
-                suffixIcon: Icons.remove_red_eye_rounded,
+              // Password TextField with Toggle Visibility
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 25),
+                child: TextFormField(
+                  controller: pass,
+                  obscureText: _obscureText,
+                  decoration: InputDecoration(
+                    hintText: 'Enter your password',
+                    labelText: 'Password',
+                    prefixIcon: Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureText
+                            ? Icons.visibility_off
+                            : Icons.remove_red_eye_rounded,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscureText = !_obscureText;
+                        });
+                      },
+                    ),
+                    filled: true, // Ensures the fill color is applied
+                    fillColor: Colors
+                        .blueGrey[50], // Background color of the text field
+                    border: OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.circular(16), // Rounded corners
+                      borderSide: BorderSide.none, // Removes border lines
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.circular(16), // Rounded corners
+                      borderSide: BorderSide.none, // Removes border lines
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.circular(16), // Rounded corners
+                      borderSide: BorderSide.none, // Removes border lines
+                    ),
+                  ),
+                  validator: (val) {
+                    if (val == null || val.isEmpty) {
+                      return "Required field";
+                    }
+                    return null;
+                  },
+                ),
               ),
               const SizedBox(height: 20),
               TextButton(
@@ -85,8 +124,8 @@ class _LoginState extends State<Login> {
                   if (formKey.currentState?.validate() ?? false) {
                     try {
                       // Sign in with email and password
-                      final credential =
-                      await FirebaseAuth.instance.signInWithEmailAndPassword(
+                      final credential = await FirebaseAuth.instance
+                          .signInWithEmailAndPassword(
                         email: email.text,
                         password: pass.text,
                       );
@@ -103,7 +142,7 @@ class _LoginState extends State<Login> {
                         if (userDoc.exists) {
                           String role = userDoc.get('role');
                           String selectedCollege =
-                          userDoc.get('selected_college');
+                              userDoc.get('selected_college');
 
                           // Navigate based on role
                           if (role == 'admin') {
@@ -128,7 +167,7 @@ class _LoginState extends State<Login> {
                               animType: AnimType.rightSlide,
                               title: 'Error',
                               desc:
-                              'Invalid role detected. Please contact support.',
+                                  'Invalid role detected. Please contact support.',
                             ).show();
                           }
                         } else {
@@ -137,7 +176,8 @@ class _LoginState extends State<Login> {
                             dialogType: DialogType.error,
                             animType: AnimType.rightSlide,
                             title: 'Error',
-                            desc: 'User data not found. Please contact support.',
+                            desc:
+                                'User data not found. Please contact support.',
                           ).show();
                         }
                       }

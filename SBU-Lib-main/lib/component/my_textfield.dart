@@ -29,8 +29,11 @@ class MyTextField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: val, // Displayed when the field is empty
         labelText: text, // Displayed as the label
-        prefixIcon: icon != null ? Icon(icon) : null, // Optional icon on the left
-        suffixIcon: suffixIcon != null ? Icon(suffixIcon) : null, // Optional icon on the right
+        prefixIcon:
+            icon != null ? Icon(icon) : null, // Optional icon on the left
+        suffixIcon: suffixIcon != null
+            ? Icon(suffixIcon)
+            : null, // Optional icon on the right
         filled: true,
         fillColor: Colors.white24, // Background color of the text field
         border: OutlineInputBorder(

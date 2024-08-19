@@ -29,6 +29,9 @@ class _RegistrationState extends State<Registration> {
   TextEditingController phone = TextEditingController();
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
   String? selectedValue; // Declare a variable to hold the dropdown value
+  bool _obscureTextPass = true; // Manage visibility of the password
+  bool _obscureTextConfirmPass =
+      true; // Manage visibility of the confirm password
 
   Future<void> selectImage() async {
     try {
@@ -57,7 +60,7 @@ class _RegistrationState extends State<Registration> {
       try {
         // Create user with Firebase Authentication
         UserCredential credential =
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: email.text.trim(),
           password: pass.text.trim(),
         );
@@ -66,13 +69,6 @@ class _RegistrationState extends State<Registration> {
         User? user = credential.user;
         if (user != null && !user.emailVerified) {
           await user.sendEmailVerification();
-          AwesomeDialog(
-            context: context,
-            dialogType: DialogType.info,
-            animType: AnimType.rightSlide,
-            title: 'Verify Your Email',
-            desc: 'A verification email has been sent to ${user.email}. Please check your inbox and verify your email before logging in.',
-          ).show();
         }
 
         // Handle image upload
@@ -118,11 +114,11 @@ class _RegistrationState extends State<Registration> {
           dialogType: DialogType.success,
           animType: AnimType.rightSlide,
           title: 'Welcome to SBU-Lib',
-          desc: 'Registration complete. Please verify your email before logging in.',
+          desc:
+              'Registration complete. Please verify your email before logging in.',
         ).show().then((_) {
           Navigator.of(context).pushReplacementNamed('login');
         });
-
       } on FirebaseAuthException catch (e) {
         if (e.code == 'weak-password') {
           AwesomeDialog(
@@ -157,149 +153,217 @@ class _RegistrationState extends State<Registration> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: SingleChildScrollView(
+      body: SingleChildScrollView(
         child: Form(
-        key: formKey,
-        child: Column(
-        children: [
-        const SizedBox(height: 10),
-    const SizedBox(height: 24),
-    const Text(
-    'Registration',
-    style: TextStyle(
-    color: Colors.black,
-    fontSize: 30,
-    fontWeight: FontWeight.bold),
-    ),
-    Lottie.asset(
-    'assets/images/Animation - 1710302184526 (1).json',
-    ),
-    Stack(
-    children: [
-    _image != null
-    ? CircleAvatar(
-    radius: 50,
-    backgroundImage: MemoryImage(_image!),
-    )
-        : const CircleAvatar(
-    radius: 50,
-    backgroundImage: AssetImage(
-    'assets/images/default-user-icon-23.jpg'),
-    ),
-    Positioned(
-    bottom: -10,
-    left: 65,
-    child: IconButton(
-    onPressed: selectImage,
-    icon: const Icon(
-    Icons.add_a_photo,
-    color: Color(0xff2c53b7),
-    ))),
-    ],
-    ),
-    const SizedBox(height: 7),
-    MyTextField(
-    icon: Icons.person,
-    obscure: false,
-    text: 'First Name',
-    val: 'enter your first name',
-    mycontroller: firstname,
-    validator: (val) => val == "" ? "Required field" : null,
-    ),
-    const SizedBox(height: 20),
-    MyTextField(
-    icon: Icons.person,
-    obscure: false,
-    text: 'Last Name',
-    val: 'enter your last name',
-    mycontroller: lastname,
-    validator: (val) => val == "" ? "Required field" : null,
-    ),
-    const SizedBox(height: 20),
-    MyTextField(
-    icon: Icons.email,
-    obscure: false,
-    text: 'Email',
-    val: 'enter your e-mail',
-    mycontroller: email,
-    validator: (val) => val == "" ? "Required field" : null,
-    ),
-    const SizedBox(height: 20),
-    MyTextField(
-    icon: Icons.lock,
-    obscure: true,
-    text: 'Password',
-    val: 'enter a password',
-    suffixIcon: Icons.remove_red_eye_rounded,
-    mycontroller: pass,
-    validator: (val) => val == "" ? "Required field" : null,
-    ),
-    const SizedBox(height: 20),
-    MyTextField(
-    suffixIcon: Icons.remove_red_eye_rounded,
-    icon: Icons.lock,
-    obscure: true,
-    text: 'Confirm Password',
-    val: 'enter the same password',
-    mycontroller: confirmpass,
-    validator: (val) => val == "" ? "Required field" : null,
-    ),
-    const SizedBox(height: 20),
-    MyTextField(
-    icon: Icons.phone,
-    obscure: false,
-    text: 'Phone Number',
-    val: 'enter your phone number',
-    mycontroller: phone,
-    validator: (val) => val == "" ? "Required field" : null,
-    ),
-    const SizedBox(height: 20),
-    MyDropdownList(
-    onChanged: (String? newValue) {
-    setState(() {
-    selectedValue = newValue;
-    });
-    print('Selected item: $newValue');
-    },
-    ),
-    TextButton(
-    onPressed: registerUser,
-    child: Container(
-    margin: const EdgeInsets.all(25),
-    width: double.infinity,
-    height: 70,
-    decoration: BoxDecoration(
-    color: const Color(0xff2c53b7),
-    border: Border.all(
-    width: 1,
-    color: const Color(0xff2c53b7),
-    ),
-    borderRadius: BorderRadius.circular(15),
-    ),
-    child: const Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-    Text(
-    textAlign: TextAlign.center,
-    'Register Now',
-    style: TextStyle(
-    fontSize: 28,
-    color: Colors.white,
-    fontWeight: FontWeight.bold),
-    ),
-      Icon(
-        Icons.arrow_circle_right_sharp,
-        color: Colors.white,
-        size: 32,
+          key: formKey,
+          child: Column(
+            children: [
+              const SizedBox(height: 10),
+              const SizedBox(height: 24),
+              const Text(
+                'Registration',
+                style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold),
+              ),
+              Lottie.asset(
+                'assets/images/Animation - 1710302184526 (1).json',
+              ),
+              Stack(
+                children: [
+                  _image != null
+                      ? CircleAvatar(
+                          radius: 50,
+                          backgroundImage: MemoryImage(_image!),
+                        )
+                      : const CircleAvatar(
+                          radius: 50,
+                          backgroundImage: AssetImage(
+                              'assets/images/default-user-icon-23.jpg'),
+                        ),
+                  Positioned(
+                      bottom: -10,
+                      left: 65,
+                      child: IconButton(
+                          onPressed: selectImage,
+                          icon: const Icon(
+                            Icons.add_a_photo,
+                            color: Color(0xff2c53b7),
+                          ))),
+                ],
+              ),
+              const SizedBox(height: 7),
+              MyTextField(
+                icon: Icons.person,
+                obscure: false,
+                text: 'First Name',
+                val: 'enter your first name',
+                mycontroller: firstname,
+                validator: (val) => val == "" ? "Required field" : null,
+              ),
+              const SizedBox(height: 20),
+              MyTextField(
+                icon: Icons.person,
+                obscure: false,
+                text: 'Last Name',
+                val: 'enter your last name',
+                mycontroller: lastname,
+                validator: (val) => val == "" ? "Required field" : null,
+              ),
+              const SizedBox(height: 20),
+              MyTextField(
+                icon: Icons.email,
+                obscure: false,
+                text: 'Email',
+                val: 'enter your e-mail',
+                mycontroller: email,
+                validator: (val) => val == "" ? "Required field" : null,
+              ),
+              const SizedBox(height: 20),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                child: TextFormField(
+                  controller: pass,
+                  obscureText: _obscureTextPass,
+                  decoration: InputDecoration(
+                    hintText: 'enter a password',
+                    labelText: 'Password',
+                    prefixIcon: Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureTextPass
+                            ? Icons.visibility_off
+                            : Icons.remove_red_eye_rounded,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscureTextPass = !_obscureTextPass;
+                        });
+                      },
+                    ),
+                    filled: true,
+                    fillColor: Colors.blueGrey[50],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                          color: Colors.blueGrey, width: 1), // Border styling
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                          color: Colors.blueGrey, width: 1), // Border styling
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                          color: Colors.blueGrey, width: 1), // Border styling
+                    ),
+                  ),
+                  validator: (val) => val == "" ? "Required field" : null,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                child: TextFormField(
+                  controller: confirmpass,
+                  obscureText: _obscureTextConfirmPass,
+                  decoration: InputDecoration(
+                    hintText: 'enter the same password',
+                    labelText: 'Confirm Password',
+                    prefixIcon: Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureTextConfirmPass
+                            ? Icons.visibility_off
+                            : Icons.remove_red_eye_rounded,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscureTextConfirmPass = !_obscureTextConfirmPass;
+                        });
+                      },
+                    ),
+                    filled: true,
+                    fillColor: Colors.blueGrey[50],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                          color: Colors.blueGrey, width: 1), // Border styling
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                          color: Colors.blueGrey, width: 1), // Border styling
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                          color: Colors.blueGrey, width: 1), // Border styling
+                    ),
+                  ),
+                  validator: (val) => val == "" ? "Required field" : null,
+                ),
+              ),
+              const SizedBox(height: 20),
+              MyTextField(
+                icon: Icons.phone,
+                obscure: false,
+                text: 'Phone Number',
+                val: 'enter your phone number',
+                mycontroller: phone,
+                validator: (val) => val == "" ? "Required field" : null,
+              ),
+              const SizedBox(height: 20),
+              MyDropdownList(
+                onChanged: (String? newValue) {
+                  setState(() {
+                    selectedValue = newValue;
+                  });
+                  print('Selected item: $newValue');
+                },
+              ),
+              TextButton(
+                onPressed: registerUser,
+                child: Container(
+                  margin: const EdgeInsets.all(25),
+                  width: double.infinity,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: const Color(0xff2c53b7),
+                    border: Border.all(
+                      width: 1,
+                      color: const Color(0xff2c53b7),
+                    ),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        textAlign: TextAlign.center,
+                        'Register Now',
+                        style: TextStyle(
+                            fontSize: 28,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      Icon(
+                        Icons.arrow_circle_right_sharp,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
-    ],
-    ),
-    ),
-    ),
-        ],
-        ),
-        ),
-        ),
     );
   }
 }

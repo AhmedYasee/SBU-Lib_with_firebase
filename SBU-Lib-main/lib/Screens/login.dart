@@ -70,7 +70,7 @@ class _LoginState extends State<Login> {
               const SizedBox(height: 20),
               // Password TextField with Toggle Visibility
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 25),
+                padding: const EdgeInsets.symmetric(horizontal: 36),
                 child: TextFormField(
                   controller: pass,
                   obscureText: _obscureText,

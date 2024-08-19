@@ -57,10 +57,23 @@ class _RegistrationState extends State<Registration> {
       try {
         // Create user with Firebase Authentication
         UserCredential credential =
-            await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: email.text.trim(),
           password: pass.text.trim(),
         );
+
+        // Send email verification
+        User? user = credential.user;
+        if (user != null && !user.emailVerified) {
+          await user.sendEmailVerification();
+          AwesomeDialog(
+            context: context,
+            dialogType: DialogType.info,
+            animType: AnimType.rightSlide,
+            title: 'Verify Your Email',
+            desc: 'A verification email has been sent to ${user.email}. Please check your inbox and verify your email before logging in.',
+          ).show();
+        }
 
         // Handle image upload
         String? imageUrl;
@@ -68,7 +81,7 @@ class _RegistrationState extends State<Registration> {
           final storageRef = FirebaseStorage.instance
               .ref()
               .child('profile_images')
-              .child('${credential.user!.uid}.jpg');
+              .child('${user!.uid}.jpg');
           final uploadTask = storageRef.putData(_image!);
           final snapshot = await uploadTask;
           imageUrl = await snapshot.ref.getDownloadURL();
@@ -78,7 +91,7 @@ class _RegistrationState extends State<Registration> {
         try {
           await FirebaseFirestore.instance
               .collection('users')
-              .doc(credential.user!.uid)
+              .doc(user!.uid)
               .set({
             'firstname': firstname.text.trim(),
             'lastname': lastname.text.trim(),
@@ -88,14 +101,6 @@ class _RegistrationState extends State<Registration> {
             'selected_college': selectedValue,
             'role': "user",
           });
-          AwesomeDialog(
-            context: context,
-            dialogType: DialogType.success,
-            animType: AnimType.rightSlide,
-            title: 'Welcome to SBU-Lib',
-            desc: 'Registration complete.',
-          ).show();
-          Navigator.of(context).pushReplacementNamed('login');
         } catch (firestoreError) {
           print("Firestore error: $firestoreError");
           AwesomeDialog(
@@ -106,6 +111,18 @@ class _RegistrationState extends State<Registration> {
             desc: 'Failed to save user data. Please try again.',
           ).show();
         }
+
+        // Navigate to login screen after showing the dialog
+        AwesomeDialog(
+          context: context,
+          dialogType: DialogType.success,
+          animType: AnimType.rightSlide,
+          title: 'Welcome to SBU-Lib',
+          desc: 'Registration complete. Please verify your email before logging in.',
+        ).show().then((_) {
+          Navigator.of(context).pushReplacementNamed('login');
+        });
+
       } on FirebaseAuthException catch (e) {
         if (e.code == 'weak-password') {
           AwesomeDialog(
@@ -140,149 +157,149 @@ class _RegistrationState extends State<Registration> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
+        body: SingleChildScrollView(
         child: Form(
-          key: formKey,
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
-              const SizedBox(height: 24),
-              const Text(
-                'Registration',
-                style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold),
-              ),
-              Lottie.asset(
-                'assets/images/Animation - 1710302184526 (1).json',
-              ),
-              Stack(
-                children: [
-                  _image != null
-                      ? CircleAvatar(
-                          radius: 50,
-                          backgroundImage: MemoryImage(_image!),
-                        )
-                      : const CircleAvatar(
-                          radius: 50,
-                          backgroundImage: AssetImage(
-                              'assets/images/default-user-icon-23.jpg'),
-                        ),
-                  Positioned(
-                      bottom: -10,
-                      left: 65,
-                      child: IconButton(
-                          onPressed: selectImage,
-                          icon: const Icon(
-                            Icons.add_a_photo,
-                            color: Color(0xff2c53b7),
-                          ))),
-                ],
-              ),
-              const SizedBox(height: 7),
-              MyTextField(
-                icon: Icons.person,
-                obscure: false,
-                text: 'First Name',
-                val: 'enter your first name',
-                mycontroller: firstname,
-                validator: (val) => val == "" ? "Required field" : null,
-              ),
-              const SizedBox(height: 20),
-              MyTextField(
-                icon: Icons.person,
-                obscure: false,
-                text: 'Last Name',
-                val: 'enter your last name',
-                mycontroller: lastname,
-                validator: (val) => val == "" ? "Required field" : null,
-              ),
-              const SizedBox(height: 20),
-              MyTextField(
-                icon: Icons.email,
-                obscure: false,
-                text: 'Email',
-                val: 'enter your e-mail',
-                mycontroller: email,
-                validator: (val) => val == "" ? "Required field" : null,
-              ),
-              const SizedBox(height: 20),
-              MyTextField(
-                icon: Icons.lock,
-                obscure: true,
-                text: 'Password',
-                val: 'enter a password',
-                suffixIcon: Icons.remove_red_eye_rounded,
-                mycontroller: pass,
-                validator: (val) => val == "" ? "Required field" : null,
-              ),
-              const SizedBox(height: 20),
-              MyTextField(
-                suffixIcon: Icons.remove_red_eye_rounded,
-                icon: Icons.lock,
-                obscure: true,
-                text: 'Confirm Password',
-                val: 'enter the same password',
-                mycontroller: confirmpass,
-                validator: (val) => val == "" ? "Required field" : null,
-              ),
-              const SizedBox(height: 20),
-              MyTextField(
-                icon: Icons.phone,
-                obscure: false,
-                text: 'Phone Number',
-                val: 'enter your phone number',
-                mycontroller: phone,
-                validator: (val) => val == "" ? "Required field" : null,
-              ),
-              const SizedBox(height: 20),
-              MyDropdownList(
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedValue = newValue;
-                  });
-                  print('Selected item: $newValue');
-                },
-              ),
-              TextButton(
-                onPressed: registerUser,
-                child: Container(
-                  margin: const EdgeInsets.all(25),
-                  width: double.infinity,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    color: const Color(0xff2c53b7),
-                    border: Border.all(
-                      width: 1,
-                      color: const Color(0xff2c53b7),
-                    ),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        textAlign: TextAlign.center,
-                        'Register Now',
-                        style: TextStyle(
-                            fontSize: 28,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      Icon(
-                        Icons.arrow_circle_right_sharp,
-                        color: Colors.white,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const LoginButton(),
-            ],
-          ),
-        ),
+        key: formKey,
+        child: Column(
+        children: [
+        const SizedBox(height: 10),
+    const SizedBox(height: 24),
+    const Text(
+    'Registration',
+    style: TextStyle(
+    color: Colors.black,
+    fontSize: 30,
+    fontWeight: FontWeight.bold),
+    ),
+    Lottie.asset(
+    'assets/images/Animation - 1710302184526 (1).json',
+    ),
+    Stack(
+    children: [
+    _image != null
+    ? CircleAvatar(
+    radius: 50,
+    backgroundImage: MemoryImage(_image!),
+    )
+        : const CircleAvatar(
+    radius: 50,
+    backgroundImage: AssetImage(
+    'assets/images/default-user-icon-23.jpg'),
+    ),
+    Positioned(
+    bottom: -10,
+    left: 65,
+    child: IconButton(
+    onPressed: selectImage,
+    icon: const Icon(
+    Icons.add_a_photo,
+    color: Color(0xff2c53b7),
+    ))),
+    ],
+    ),
+    const SizedBox(height: 7),
+    MyTextField(
+    icon: Icons.person,
+    obscure: false,
+    text: 'First Name',
+    val: 'enter your first name',
+    mycontroller: firstname,
+    validator: (val) => val == "" ? "Required field" : null,
+    ),
+    const SizedBox(height: 20),
+    MyTextField(
+    icon: Icons.person,
+    obscure: false,
+    text: 'Last Name',
+    val: 'enter your last name',
+    mycontroller: lastname,
+    validator: (val) => val == "" ? "Required field" : null,
+    ),
+    const SizedBox(height: 20),
+    MyTextField(
+    icon: Icons.email,
+    obscure: false,
+    text: 'Email',
+    val: 'enter your e-mail',
+    mycontroller: email,
+    validator: (val) => val == "" ? "Required field" : null,
+    ),
+    const SizedBox(height: 20),
+    MyTextField(
+    icon: Icons.lock,
+    obscure: true,
+    text: 'Password',
+    val: 'enter a password',
+    suffixIcon: Icons.remove_red_eye_rounded,
+    mycontroller: pass,
+    validator: (val) => val == "" ? "Required field" : null,
+    ),
+    const SizedBox(height: 20),
+    MyTextField(
+    suffixIcon: Icons.remove_red_eye_rounded,
+    icon: Icons.lock,
+    obscure: true,
+    text: 'Confirm Password',
+    val: 'enter the same password',
+    mycontroller: confirmpass,
+    validator: (val) => val == "" ? "Required field" : null,
+    ),
+    const SizedBox(height: 20),
+    MyTextField(
+    icon: Icons.phone,
+    obscure: false,
+    text: 'Phone Number',
+    val: 'enter your phone number',
+    mycontroller: phone,
+    validator: (val) => val == "" ? "Required field" : null,
+    ),
+    const SizedBox(height: 20),
+    MyDropdownList(
+    onChanged: (String? newValue) {
+    setState(() {
+    selectedValue = newValue;
+    });
+    print('Selected item: $newValue');
+    },
+    ),
+    TextButton(
+    onPressed: registerUser,
+    child: Container(
+    margin: const EdgeInsets.all(25),
+    width: double.infinity,
+    height: 70,
+    decoration: BoxDecoration(
+    color: const Color(0xff2c53b7),
+    border: Border.all(
+    width: 1,
+    color: const Color(0xff2c53b7),
+    ),
+    borderRadius: BorderRadius.circular(15),
+    ),
+    child: const Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+    Text(
+    textAlign: TextAlign.center,
+    'Register Now',
+    style: TextStyle(
+    fontSize: 28,
+    color: Colors.white,
+    fontWeight: FontWeight.bold),
+    ),
+      Icon(
+        Icons.arrow_circle_right_sharp,
+        color: Colors.white,
+        size: 32,
       ),
+    ],
+    ),
+    ),
+    ),
+        ],
+        ),
+        ),
+        ),
     );
   }
 }

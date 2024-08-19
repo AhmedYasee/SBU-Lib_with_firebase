@@ -38,7 +38,7 @@ class _CategoriesListUserState extends State<CategoriesListUser> {
         .listen((snapshot) {
       setState(() {
         _allCategories = snapshot.docs;
-        _filteredCategories = _allCategories;
+        _filterCategories(); // Apply filtering after data is fetched
       });
     });
   }
@@ -49,7 +49,7 @@ class _CategoriesListUserState extends State<CategoriesListUser> {
       _filteredCategories = _allCategories.where((category) {
         final categoryData = category.data() as Map<String, dynamic>;
         final categoryName = categoryData['name'] as String;
-        return categoryName.toLowerCase().startsWith(query);
+        return categoryName.toLowerCase().contains(query);
       }).toList();
     });
   }
@@ -87,7 +87,7 @@ class _CategoriesListUserState extends State<CategoriesListUser> {
           ),
           Expanded(
             child: _filteredCategories.isEmpty
-                ? Center(
+                ? const Center(
                     child: Text(
                       "No categories found. Please add one.",
                       style: TextStyle(fontSize: 18),
